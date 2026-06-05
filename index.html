@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorteador Cara a Cara</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Confete container (criado via JS) -->
+  <div id="confete-container" aria-hidden="true"></div>
+
+  <div class="app">
+
+    <!-- Cabeçalho -->
+    <header class="header">
+      <div class="header-badge">🎲</div>
+      <h1 class="titulo">Sorteador<br><span>Cara a Cara</span></h1>
+    </header>
+
+    <!-- Card principal do sorteio -->
+    <main class="main">
+      <div class="card-wrapper">
+        <div class="card" id="card-principal">
+          <div class="card-inner">
+            <div class="card-topo">⭐</div>
+            <div class="card-imagem-wrapper">
+              <img id="imagem-principal" src="img/16raquel.png" alt="Personagem" />
+            </div>
+            <div class="card-rodape">CARA A CARA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nome do personagem sorteado -->
+      <div class="nome-resultado" id="nome-resultado" aria-live="polite"></div>
+
+      <!-- Botões -->
+      <div class="botoes">
+        <button class="btn-sortear" id="btn-sortear">
+          <span class="btn-icon">🎰</span> Sortear personagem
+        </button>
+        <button class="btn-novo" id="btn-novo" style="display:none;">
+          <span class="btn-icon">🔄</span> Novo sorteio
+        </button>
+      </div>
+    </main>
+
+    <!-- Grade de miniaturas -->
+    <section class="grade-section">
+      <h2 class="grade-titulo">Todos os personagens</h2>
+      <div class="grade" id="grade-personagens" role="list" aria-label="Grade de personagens"></div>
+    </section>
+
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
