@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sorteador de personagens estilo Cara a Cara.">
+  <title>Sorteador Cara a Cara</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="app">
+    <section class="hero" aria-labelledby="titulo-principal">
+      <p class="eyebrow">Jogo em família</p>
+      <h1 id="titulo-principal">Sorteador Cara a Cara</h1>
+      <p class="subtitle">Toque no botão e deixe a carta escolher o personagem da rodada.</p>
+    </section>
+
+    <section class="draw-area" aria-live="polite">
+      <div class="winner-card" id="winnerCard">
+        <div class="card-shine" aria-hidden="true"></div>
+        <div class="image-frame">
+          <img id="characterImage" src="" alt="Personagem sorteado">
+        </div>
+        <h2 id="characterName">Pronto para sortear?</h2>
+      </div>
+
+      <div class="actions">
+        <button class="primary-button" id="drawButton" type="button">Sortear personagem</button>
+        <button class="secondary-button is-hidden" id="newDrawButton" type="button">Novo sorteio</button>
+      </div>
+    </section>
+
+    <section class="gallery-section" aria-labelledby="grade-personagens">
+      <div class="section-heading">
+        <h2 id="grade-personagens">Todos os personagens</h2>
+        <span id="totalCharacters">24 cartas</span>
+      </div>
+
+      <div class="characters-grid" id="charactersGrid"></div>
+    </section>
+  </main>
+
+  <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
