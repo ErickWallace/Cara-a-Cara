@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cara a Cara – Sortear Personagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #0d0d1a;
+      --panel:     #16162a;
+      --card:      #1e1e36;
+      --accent1:   #f7c948;
+      --accent2:   #ff5e7e;
+      --accent3:   #4de8c2;
+      --text:      #f0eefc;
+      --muted:     #7b79a8;
+      --radius:    20px;
+      --shadow:    0 8px 40px rgba(0,0,0,.55);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* ── stars bg ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        radial-gradient(circle, #fff 1px, transparent 1px),
+        radial-gradient(circle, #fff 1px, transparent 1px);
+      background-size: 120px 120px, 80px 80px;
+      background-position: 0 0, 40px 40px;
+      opacity: .04;
+      pointer-events: none;
+    }
+
+    header {
+      position: relative; z-index: 1;
+      width: 100%;
+      text-align: center;
+      padding: 28px 16px 8px;
+    }
+    header h1 {
+      font-family: 'Boogaloo', cursive;
+      font-size: clamp(2rem, 10vw, 3.4rem);
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--accent1) 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      line-height: 1.1;
+    }
+    header p {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-top: 4px;
+    }
+
+    main {
+      position: relative; z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 16px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* ── slot machine window ── */
+    .slot-window {
+      width: 100%;
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 2px solid rgba(247,201,72,.18);
+      box-shadow: var(--shadow), 0 0 0 0 var(--accent1);
+      overflow: hidden;
+      position: relative;
+      transition: box-shadow .3s;
+    }
+    .slot-window.spinning {
+      box-shadow: var(--shadow), 0 0 28px 6px rgba(247,201,72,.35);
+    }
+    .slot-window.winner {
+      box-shadow: var(--shadow), 0 0 44px 12px rgba(77,232,194,.5);
+      border-color: var(--accent3);
+    }
+
+    /* overlay gradients top/bottom fading into card color */
+    .slot-window::before,
+    .slot-window::after {
+      content: '';
+      position: absolute; left: 0; right: 0; z-index: 2;
+      height: 60px;
+      pointer-events: none;
+    }
+    .slot-window::before { top: 0;    background: linear-gradient(to bottom, var(--card), transparent); }
+    .slot-window::after  { bottom: 0; background: linear-gradient(to top,    var(--card), transparent); }
+
+    /* center line */
+    .slot-window .center-line {
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%; transform: translateY(-50%);
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent1), transparent);
+      z-index: 3;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .slot-window.spinning .center-line { opacity: 1; }
+
+    /* reel */
+    .reel {
+      height: 280px;
+      overflow: hidden;
+      position: relative;
+    }
+    .reel-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      will-change: transform;
+    }
+
+    .reel-card {
+      width: 100%;
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .reel-card img {
+      width: 140px; height: 140px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,.08);
+      background: var(--panel);
+    }
+    .reel-card .card-name {
+      font-family: 'Boogaloo', cursive;
+      font-size: 1.3rem;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+
+    /* ── result panel ── */
+    .result-panel {
+      width: 100%;
+      background: var(--panel);
+      border-radius: var(--radius);
+      border: 2px solid transparent;
+      padding: 24px 20px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px) scale(.96);
+      transition: opacity .4s ease, transform .4s ease, border-color .4s;
+    }
+    .result-panel.show {
+      opacity: 1;
+      transform: none;
+      border-color: var(--accent3);
+    }
+    .result-panel img {
+      width: 160px; height: 160px;
+      object-fit: cover;
+      border-radius: 16px;
+      border: 3px solid var(--accent3);
+      box-shadow: 0 0 30px rgba(77,232,194,.3);
+      animation: none;
+    }
+    .result-panel.show img {
+      animation: popIn .5s cubic-bezier(.22,1.8,.5,1) both;
+    }
+    @keyframes popIn {
+      from { transform: scale(.5); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .result-panel h2 {
+      font-family: 'Boogaloo', cursive;
+      font-size: 2rem;
+      margin-top: 14px;
+      color: var(--accent3);
+      letter-spacing: 1px;
+    }
+    .result-panel .badge {
+      display: inline-block;
+      margin-top: 8px;
+      background: rgba(247,201,72,.15);
+      color: var(--accent1);
+      border: 1px solid var(--accent1);
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 3px 14px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* confetti burst */
+    .confetti-container {
+      position: fixed; inset: 0; z-index: 100;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+      animation: confettiFall 1.2s ease forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── button ── */
+    .btn-sorteio {
+      width: 100%;
+      max-width: 320px;
+      padding: 18px 0;
+      font-family: 'Boogaloo', cursive;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      color: #0d0d1a;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(247,201,72,.4);
+      transition: transform .15s, box-shadow .15s, opacity .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-sorteio:not(:disabled):active {
+      transform: scale(.96);
+      box-shadow: 0 3px 12px rgba(247,201,72,.3);
+    }
+    .btn-sorteio:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+    .btn-sorteio::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.25) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: transform .4s;
+    }
+    .btn-sorteio:not(:disabled):hover::after {
+      transform: translateX(100%);
+    }
+
+    /* ── ticker dots ── */
+    .ticker {
+      display: flex; gap: 8px; align-items: center;
+      opacity: 0; transition: opacity .3s;
+    }
+    .ticker.show { opacity: 1; }
+    .ticker span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent1);
+      animation: tickerBounce .5s ease infinite alternate;
+    }
+    .ticker span:nth-child(2) { animation-delay: .15s; background: var(--accent2); }
+    .ticker span:nth-child(3) { animation-delay: .30s; background: var(--accent3); }
+    @keyframes tickerBounce {
+      from { transform: scaleY(1);   opacity: .5; }
+      to   { transform: scaleY(1.8); opacity: 1;  }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎭 Cara a Cara</h1>
+  <p>Sorteie um personagem e descubra quem é!</p>
+</header>
+
+<main>
+  <!-- slot machine -->
+  <div class="slot-window" id="slotWindow">
+    <div class="center-line"></div>
+    <div class="reel" id="reel">
+      <div class="reel-inner" id="reelInner">
+        <!-- cards injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ticker dots -->
+  <div class="ticker" id="ticker">
+    <span></span><span></span><span></span>
+  </div>
+
+  <!-- result -->
+  <div class="result-panel" id="resultPanel">
+    <img id="resultImg" src="" alt="" />
+    <h2 id="resultName"></h2>
+    <span class="badge">Personagem sorteado!</span>
+  </div>
+
+  <!-- confetti container -->
+  <div class="confetti-container" id="confetti"></div>
+
+  <!-- button -->
+  <button class="btn-sorteio" id="btnSortear" onclick="iniciarSorteio()">
+    🎰 Sortear Personagem
+  </button>
+</main>
+
+<script>
+  const personagens = [
+    { nome: "Erick",    imagem: "img/1erick.png" },
+    { nome: "Laura",    imagem: "img/2laura.png" },
+    { nome: "Gabriel",  imagem: "img/3gabriel.png" },
+    { nome: "Rebeka",   imagem: "img/4rebeka.png" },
+    { nome: "Carlos",   imagem: "img/5carlos.png" },
+    { nome: "Gabrielle",imagem: "img/6gabriele.png" },
+    { nome: "Larissa",  imagem: "img/7larissa.png" },
+    { nome: "Estevão",  imagem: "img/8estevão.png" },
+    { nome: "Leandro",  imagem: "img/9leandro.png" },
+    { nome: "Andresa",  imagem: "img/10andresa.png" },
+    { nome: "João",     imagem: "img/11joão.png" },
+    { nome: "Verônica", imagem: "img/12veronica.png" },
+    { nome: "Arthur",   imagem: "img/13arthur.png" },
+    { nome: "Elisa",    imagem: "img/14elisa.png" },
+    { nome: "Gustavo",  imagem: "img/15gustavo.png" },
+    { nome: "Raquel",   imagem: "img/16raquel.png" },
+    { nome: "Jessé",    imagem: "img/17jessé.png" },
+    { nome: "Liciana",  imagem: "img/18liciane.png" },
+    { nome: "Adrielle", imagem: "img/19adrielle.png" },
+    { nome: "Gislei",   imagem: "img/20gislei.png" },
+    { nome: "Giovana",  imagem: "img/21giovana.png" },
+    { nome: "Barneh",   imagem: "img/22baerneh.png" },
+    { nome: "Leonardo", imagem: "img/23leo.png" },
+    { nome: "Junia",    imagem: "img/24junia.png" },
+  ];
+
+  const CARD_HEIGHT = 168; // px per card (padding + img + name)
+  const reelInner   = document.getElementById('reelInner');
+  const reel        = document.getElementById('reel');
+  const slotWindow  = document.getElementById('slotWindow');
+  const resultPanel = document.getElementById('resultPanel');
+  const resultImg   = document.getElementById('resultImg');
+  const resultName  = document.getElementById('resultName');
+  const btnSortear  = document.getElementById('btnSortear');
+  const ticker      = document.getElementById('ticker');
+  const confettiEl  = document.getElementById('confetti');
+
+  // build a long strip: shuffle copies of the 24 chars ~5×
+  function buildStrip() {
+    reelInner.innerHTML = '';
+    const total = personagens.length * 5;
+    const strip = [];
+    for (let i = 0; i < 5; i++) {
+      const shuffled = [...personagens].sort(() => Math.random() - .5);
+      strip.push(...shuffled);
+    }
+    strip.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'reel-card';
+      card.innerHTML = `
+        <img src="${p.imagem}" alt="${p.nome}" loading="lazy" />
+        <span class="card-name">${p.nome}</span>`;
+      reelInner.appendChild(card);
+    });
+    return strip;
+  }
+
+  function iniciarSorteio() {
+    btnSortear.disabled = true;
+    resultPanel.classList.remove('show');
+    slotWindow.classList.remove('winner');
+    slotWindow.classList.add('spinning');
+    ticker.classList.add('show');
+    confettiEl.innerHTML = '';
+
+    const strip    = buildStrip();
+    const winner   = Math.floor(Math.random() * personagens.length);
+    const winnerP  = personagens[winner];
+
+    // pick a landing index in the last copy of the strip
+    // so there are enough cards before it for a nice spin
+    const lastCopyStart = personagens.length * 4;
+    const landingIdx    = lastCopyStart + winner;
+
+    // center that card in the reel (280px high window)
+    const reelCenter = reel.clientHeight / 2;
+    const targetY    = landingIdx * CARD_HEIGHT - reelCenter + CARD_HEIGHT / 2;
+
+    // fast spin then decelerate (CSS transition)
+    reelInner.style.transition = 'none';
+    reelInner.style.transform  = 'translateY(0)';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // total duration split: fast ~1.2s + slow 1.0s
+        const total    = 2200;
+        const spinDist = Math.max(targetY - 600, 0); // stop before final 600px
+        const finalDist = targetY;
+
+        // two-phase animation via CSS
+        reelInner.style.transition =
+          `transform ${total}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+        reelInner.style.transform = `translateY(-${finalDist}px)`;
+
+        // after spin ends → reveal
+        setTimeout(() => {
+          slotWindow.classList.remove('spinning');
+          slotWindow.classList.add('winner');
+          ticker.classList.remove('show');
+
+          resultImg.src       = winnerP.imagem;
+          resultImg.alt       = winnerP.nome;
+          resultName.textContent = winnerP.nome;
+          resultPanel.classList.add('show');
+
+          spawnConfetti();
+
+          btnSortear.disabled = false;
+          btnSortear.textContent = '🎰 Sortear Novamente';
+        }, total + 100);
+      });
+    });
+  }
+
+  // ── confetti ──
+  const COLORS = ['#f7c948','#ff5e7e','#4de8c2','#a78bfa','#fb923c','#60a5fa'];
+  function spawnConfetti() {
+    for (let i = 0; i < 60; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.cssText = `
+        left: ${Math.random() * 100}%;
+        top: -12px;
+        background: ${COLORS[Math.floor(Math.random() * COLORS.length)]};
+        width: ${6 + Math.random() * 8}px;
+        height: ${6 + Math.random() * 8}px;
+        border-radius: ${Math.random() > .5 ? '50%' : '2px'};
+        animation-delay: ${Math.random() * .6}s;
+        animation-duration: ${.9 + Math.random() * .6}s;
+      `;
+      confettiEl.appendChild(piece);
+    }
+    setTimeout(() => confettiEl.innerHTML = '', 2000);
+  }
+</script>
+</body>
+</html>
